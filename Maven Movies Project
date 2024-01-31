@@ -1,0 +1,115 @@
+—We will need a list of all staff members including their first and last name, email address, and the store identification number where they work
+
+SELECT first_name, last_name, email, store_id
+FROM staff;
+
+—We will need separate counts of inventory items held at each of the two stores
+
+SELECT store_id, COUN(inventory_id) AS inventory_items
+FROM inventory
+GROUP BY store_id;
+
+— We will need a count of active customers for each store. Separately please
+
+SELECT store_id, COUNT(customer_id) AS active_customers
+FROM customer
+WHERE active=1
+GROUP BY store_id;
+
+— We will need you to provide a count of all customer email addresses stored in the database
+
+SELECT COUNT( email) AS emails
+FROM customer;
+
+— Please provide a count of unique film titles you have in inventory at each store and then provide a count of the unique categories of films you provide
+
+SELECT store_id, COUNT(DISTINCT film_id) AS unique_films
+FROM inventory
+GROUP BY store_id;
+
+SELECT COUNT(DISTINCT name) AS unique_categories
+FROM category
+
+— Please provide the replacement cost for the film that is least expensive to replace , the most expensive to replace , and the average of all the films you carry
+
+SELECT 
+MIN(replacement_cost) AS least_expensive,
+MAX(replacement_cost) AS most_expensive,
+AVG(replacement_cost) AS avergae_replacement_cost
+FROM film;
+
+
+— Please provide the average payment you process as well as the maximum payment you have processed 
+
+SELECT AVG(amount) AS avergae_payment,
+MAX( amount) AS  max_payment
+FROM payment;
+
+
+— Please provide a list of all customer identification values, with a count of rentals they have made all time, with your average volume customers at the top if the list
+
+SELECT customer_id, COUNT(rental_id) AS number_of_rentals
+FROM rental
+GROUP BY customer_id
+ORDER BY COUNT(rental_id) DESC;
+
+– Please send over the managers’ names at each store, with the full address of each property (street address, district, city and country)
+
+SELECT staff.first_name AS manager_first_name, staff.last_name AS manager_last_name, address.address, address.district, city.city, country.country
+FROM store
+LEFT JOIN staff ON store.magaer_staff_id=staff.staff_id
+LEFT JOIN address ON store.address_id=address.address_id
+LEFT JOIN city ON city.country_id= country.country_id;
+
+
+– Please pull together a list of each inventory item you have stocked, including the store id number, the inventory id number , the name of the film, the film’s rating, its rental rate and replacement cost
+
+SELECT inventory.store_id, inventory.inventory_id, film.title, film.rating, film.rental_rate, film.replacement_cost
+FROM inventory
+LEFT JOIN film ON inventory.film_id= film.film_id;
+
+
+– From the same list of films you just pulled please roll that data up and provide a summary level overview of your inventory. We would like to know how many inventory items you have with each rating at each store.
+
+SELECT inventory.store_id, film.rating, COUNT(inventory_id) AS inventory_items
+FROM inventory
+LEFT JOIN film ON inventory.film_id= film.film_id
+GROUP BY inventory.store_id, film.rating;
+
+
+– We want to understand how diversified the inventory is in terms of replacement costs. We want to see how big of a hit it would be if a certain category of film became unpopular at one time at a certain store. We would like to see the number of films as well as the average replacement cost, and the total replacement costs sliced by store and film category 
+
+
+SELECT store_id, category.name AS category,
+COUNT(inventory.inventory_id) AS films
+AVG( film.replacement_cost) AS average_replacement_cost
+SUM(film.replacment_cost) AS total_replacement_cost
+FROM inventory
+LEFT JOIN film ON inventory.film_id=film.film_id
+LEFT JOIN film_category ON category.category_id= film_category.category_id
+GROUP BY store_id, category.name
+ORDER BY SUM(film_replacement_cost) DESC;
+
+
+–Please provide a list of all customer names, which store they go to, whether or not they are currently active, and their full address
+
+SELECT customer.first_name, customer.last_name, customer.store_id, customer.active, address.address, city.city, country.country
+FROM customer
+LEFT JOIN address ON customer.address_id= address.address_id
+LEFT JOIN city ON address.city_id= city.city_id
+LEFT JOIN country ON city.country_id = country.country_id;
+
+
+– Please pull together a list of customer names, their total lifetime rental, and the sum of all payments you have collected from them. It would be great to see it ordered on total lifetime value, with the most valuable customer at the top of the list
+
+SELECT customer.first_name, customer.last_name, 
+COUNT (rental.rental_id) AS total_rentals,
+SUM(payment.amount) AS total_payment_amount
+FROM customer
+LEFT JOIN rental ON customer.customer_id= rental.customer_id
+LEFT JOIN payment ON rental.rental_id= payment.rental_id
+GROUP BY customer.first_name, customer.last_name
+ORDER BY SUM(payment.amount) DESC;
+
+
+
